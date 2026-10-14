@@ -31,6 +31,9 @@ app.use((error, req, res, next) => {
   console.error(error);
   res.status(500).json({ error: "Something went wrong. Please try again." });
 });
-app.listen(PORT, () =>
-  console.log(`API listening at http://localhost:${PORT}`),
-);
+if (!process.env.VERCEL) {
+  app.listen(PORT, () =>
+    console.log(`API listening at http://localhost:${PORT}`),
+  );
+}
+export default app;

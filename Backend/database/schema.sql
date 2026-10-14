@@ -51,31 +51,8 @@ CREATE INDEX chat_sessions_user_updated_idx
 CREATE INDEX chat_sessions_messages_gin_idx
   ON chat_sessions USING GIN (messages);
 
-INSERT INTO users (
-  id,
-  name,
-  email,
-  password_hash
-) VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'Demo User',
-  'demo@example.com',
-  'replace-with-real-scrypt-or-bcrypt-hash'
-);
 
-INSERT INTO appointments (
-  user_id,
-  service,
-  starts_at,
-  duration_minutes,
-  status
-) VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'Consultation',
-  NOW() + INTERVAL '2 days',
-  30,
-  'confirmed'
-);
 
--- Bound JSONB histories in the application. At scale, split messages into a
--- chat_messages table and partition appointments by business/date.
+
+
+
