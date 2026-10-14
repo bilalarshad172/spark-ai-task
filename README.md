@@ -1,4 +1,4 @@
-# Northstar Appointment Assistant
+# sparkAI task
 
 React + Vite frontend and Express API for authenticated, AI-assisted appointment booking.
 

@@ -18,7 +18,17 @@ export default function App() {
   const [sessionId, setSessionId] = useState("");
   const [messages, setMessages] = useState([welcomeMessage]);
   const [booking, setBooking] = useState(emptyBooking);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(null);
+
+  function showNotice(message, type = "success") {
+    setNotice({ message, type });
+  }
+
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(null), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
 
   useEffect(() => {
     if (!auth) {
@@ -38,7 +48,7 @@ export default function App() {
         setAppointments(appointmentsResult);
         setSessionId(session.id);
       } catch (error) {
-        if (active) setNotice(error.message);
+        if (active) showNotice(error.message, "error");
       }
     }
 
@@ -53,17 +63,20 @@ export default function App() {
     setAppointments(appointmentsResult);
   }
 
-  function authenticate(data) {
+  function authenticate(data, successMessage) {
     localStorage.setItem("auth", JSON.stringify(data));
     setAuth(data);
+    showNotice(successMessage);
   }
   function signOut() {
     localStorage.removeItem("auth");
     setAuth(null);
     setMessages([welcomeMessage]);
+    setNotice(null);
   }
   async function sendMessage(content) {
-    if (!sessionId) return setNotice("Preparing your chat session. Please try again in a moment.");
+    if (!sessionId)
+      return showNotice("Preparing your chat session. Please try again in a moment.", "error");
     setMessages((current) => [...current, { role: "user", content }]);
     try {
       const result = await api(
@@ -75,7 +88,7 @@ export default function App() {
       if (result.message.details?.service)
         setBooking((current) => ({ ...current, service: result.message.details.service }));
     } catch (error) {
-      setNotice(error.message);
+      showNotice(error.message, "error");
     }
   }
   async function createBooking(event) {
@@ -89,11 +102,11 @@ export default function App() {
         },
         auth.token,
       );
-      setNotice("Appointment confirmed - it is now in your schedule.");
+      showNotice("Appointment created successfully. It is now in your schedule.");
       setBooking(emptyBooking);
       loadAppointments();
     } catch (error) {
-      setNotice(error.message);
+      showNotice(error.message, "error");
     }
   }
 
@@ -101,7 +114,7 @@ export default function App() {
   return (
     <main className="mx-auto max-w-6xl px-4 pb-10 sm:px-7">
       <Header user={auth.user} onSignOut={signOut} />
-      <div className="flex flex-col justify-between gap-5 py-9 sm:flex-row sm:items-end sm:py-13">
+      <div className="flex flex-col justify-between gap-5 py-7 sm:flex-row sm:items-end sm:py-8">
         <div>
           <p className="text-[11px] font-bold tracking-[.15em] text-emerald-700">
             YOUR CARE, SIMPLIFIED
@@ -113,13 +126,41 @@ export default function App() {
             Chat with the booking assistant or choose a time directly.
           </p>
         </div>
-        <span className="w-fit rounded-full bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-          Assistant online
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+          <span className="relative flex size-2" aria-hidden="true">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981]" />
+          </span>
+          sparkAI task active
         </span>
       </div>
       {notice && (
-        <div className="mb-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          {notice}
+        <div
+          className={
+            "fixed right-4 top-4 z-50 flex max-w-[calc(100vw-2rem)] items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg sm:right-6 sm:top-6 " +
+            (notice.type === "error"
+              ? "border-red-200 bg-red-50 text-red-800"
+              : "border-emerald-200 bg-white text-emerald-950")
+          }
+          role="status"
+        >
+          <span
+            className={
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white " +
+              (notice.type === "error" ? "bg-red-500" : "bg-emerald-600")
+            }
+            aria-hidden="true"
+          >
+            {notice.type === "error" ? "!" : "✓"}
+          </span>
+          <span>{notice.message}</span>
+          <button
+            className="-mr-1 -mt-1 bg-transparent px-1 text-lg leading-none opacity-60 hover:opacity-100"
+            aria-label="Dismiss notification"
+            onClick={() => setNotice(null)}
+          >
+            ×
+          </button>
         </div>
       )}
       <div className="grid gap-5 lg:grid-cols-[1.35fr_.8fr]">

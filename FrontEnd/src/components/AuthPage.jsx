@@ -12,11 +12,15 @@ export default function AuthPage({ onAuthenticated }) {
     event.preventDefault();
     setError("");
     try {
+      const result = await api("/auth/" + (isSignup ? "signup" : "login"), {
+        method: "POST",
+        body: JSON.stringify(form),
+      });
       onAuthenticated(
-        await api("/auth/" + (isSignup ? "signup" : "login"), {
-          method: "POST",
-          body: JSON.stringify(form),
-        }),
+        result,
+        isSignup
+          ? "Account created successfully. Welcome to sparkAI task!"
+          : "Signed in successfully. Welcome back!",
       );
     } catch (requestError) {
       setError(requestError.message);
@@ -25,7 +29,7 @@ export default function AuthPage({ onAuthenticated }) {
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.1fr_.9fr]">
       <section className="bg-emerald-50 px-10 py-16 text-emerald-950 sm:px-[10vw] sm:py-[12vw]">
-        <b className="text-emerald-800">* NORTHSTAR</b>
+        <b className="text-emerald-800">✦ sparkAI task</b>
         <p className="mt-16 text-[11px] font-bold tracking-[.15em] text-emerald-700">
           APPOINTMENTS, SIMPLIFIED
         </p>
