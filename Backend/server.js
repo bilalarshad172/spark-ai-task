@@ -1,24 +1,28 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+import "dotenv/config";
 import authRoutes from "./routes/authRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import { logger, rateLimit } from "./middleware/requestMiddleware.js";
+import { query } from "./database/pool.js";
 
-dotenv.config();
+
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173" }));
 app.use(express.json({ limit: "50kb" }));
 app.use(logger);
 app.use(rateLimit);
-app.get("/api/health", (req, res) =>
-  res.json({
-    status: "ok",
-    database: process.env.DATABASE_URL ? "postgres" : "development-memory",
-  }),
-);
+app.get("/api/health", async (req, res) => {
+  try {
+    await query("SELECT 1");
+    res.json({ status: "ok", database: "postgres" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ status: "error" });
+  }
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/chat", chatRoutes);
